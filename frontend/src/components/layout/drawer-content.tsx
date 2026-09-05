@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { AcUnitOutlined, ArrowDropDown, ArrowRight } from '@mui/icons-material';
+import { AcUnitOutlined, ArrowDropDown, ArrowRight, VerifiedOutlined } from '@mui/icons-material';
 import {
   Box,
   Collapse,
@@ -77,6 +77,16 @@ export const DrawerContent: React.FC<DrawerContentProps> = ({
               );
             }
           })}
+        <Divider />
+        {/* Not part of the RBAC-driven menus above (no access-control row seeded
+            for it) - see routes.tsx for why it's kept outside /app. Still needs
+            a way to be reached from the UI, so it's a static entry here. */}
+        <ListItemButton component={Link} to='/certificates'>
+          <ListItemIcon>
+            <VerifiedOutlined />
+          </ListItemIcon>
+          <ListItemText primary='Certificates' />
+        </ListItemButton>
       </List>
     </div>
   );

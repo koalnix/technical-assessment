@@ -25,6 +25,7 @@ import { EditDepartmentPage, ListDepartmentsPage } from '@/domains/department/pa
 import { ErrorPage, NotFound } from '@/components/errors';
 import { MainLayout } from '@/components/layout';
 import { RoleAndPermission } from '@/domains/role-and-permission/pages';
+import { CertificatesPage } from '@/domains/certificates/pages/certificates-page';
 
 export const routes = [
   {
@@ -85,6 +86,24 @@ export const routes = [
       { path: 'notices/recipients/edit/:id', element: <EditNoticeRecipientPage /> },
       { path: '*', element: <NotFound /> }
     ]
+  },
+  {
+    // Kept outside the permission-gated /app tree on purpose: the blockchain
+    // certificates feature has no access-control/menu row seeded for it, so
+    // it's just login-gated rather than going through the RBAC menu system.
+    path: '/certificates',
+    element: (
+      <ProtectedRoute>
+        <MainLayout>
+          <CertificatesPage />
+        </MainLayout>
+      </ProtectedRoute>
+    ),
+    errorElement: (
+      <MainLayout>
+        <ErrorPage message='Error loading the certificates page' />
+      </MainLayout>
+    )
   },
   {
     path: '*',

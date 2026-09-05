@@ -1,0 +1,67 @@
+services:
+  postgres:
+    image: postgres:12-alpine
+    environment:
+      POSTGRES_DB: school_mgmt
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+      - ./seed_db/tables.sql:/docker-entrypoint-initdb.d/01-tables.sql:ro
+      - ./seed_db/seed-db.sql:/docker-entrypoint-initdb.d/02-seed-db.sql:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d school_mgmt"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  backend:
+    build: ./backend
+    depends_on:
+      postgres:
+        condition: service_healthy
+    ports:
+      - "5007:5007"
+    environment:
+      PORT: 5007
+      DATABASE_URL: postgresql://postgres:postgres@postgres:5432/school_mgmt
+      JWT_ACCESS_TOKEN_SECRET: 12345
+      JWT_REFRESH_TOKEN_SECRET: 12345678
+      CSRF_TOKEN_SECRET: my_csrf_secret
+      JWT_ACCESS_TOKEN_TIME_IN_MS: 900000
+      JWT_REFRESH_TOKEN_TIME_IN_MS: 28800000
+      CSRF_TOKEN_TIME_IN_MS: 950000
+      MAIL_FROM_USER: your-desired-name@domain-name.com
+      EMAIL_VERIFICATION_TOKEN_SECRET: 863yncir8bc2r
+      EMAIL_VERIFICATION_TOKEN_TIME_IN_MS: 18000000
+      PASSWORD_SETUP_TOKEN_TIME_IN_MS: 300000
+      PASSWORD_SETUP_TOKEN_SECRET: gwdigwidw
+      UI_URL: http://localhost:5173
+      API_URL: http://localhost:5007
+      COOKIE_DOMAIN: localhost
+      RESEND_API_KEY: re_123456789
+
+  blockchain:
+    build: ./blockchain
+    ports:
+      - "8545:8545"
+
+  frontend:
+    build: ./frontend
+    depends_on:
+      - backend
+    ports:
+      - "5173:5173"
+    environment:
+      VITE_API_URL: http://localhost:5007
+      VITE_GO_SERVICE_URL: http://localhost:8081
+      # Deterministic address: the deploy script is always the first
+      # transaction (nonce 0) from Hardhat's fixed default account #0 on a
+      # fresh chain, so this address is the same on every `docker compose up`.
+      VITE_CERTIFICATE_CONTRACT_ADDRESS: "0x5FbDB2315678afecb367f032d93F642f64180aa3"
+      VITE_LOCAL_CHAIN_RPC_URL: http://localhost:8545
+
+volumes:
+  pgdata:
